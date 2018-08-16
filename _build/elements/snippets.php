@@ -1,33 +1,25 @@
 <?php
 
 return [
-    'modExtra' => [
-        'file' => 'modextra',
-        'description' => 'modExtra snippet to list items',
+    'modInstagram' => [
+        'file' => 'modinstagram',
+        'description' => 'modInstagram snippet to list posts',
         'properties' => [
             'tpl' => [
                 'type' => 'textfield',
-                'value' => 'tpl.modExtra.item',
+                'value' => 'tpl.modInstagram.item',
             ],
-            'sortby' => [
+            'tplWrapper' => [
                 'type' => 'textfield',
-                'value' => 'name',
-            ],
-            'sortdir' => [
-                'type' => 'list',
-                'options' => [
-                    ['text' => 'ASC', 'value' => 'ASC'],
-                    ['text' => 'DESC', 'value' => 'DESC'],
-                ],
-                'value' => 'ASC',
+                'value' => 'tpl.modInstagram.wrapper',
             ],
             'limit' => [
                 'type' => 'numberfield',
-                'value' => 10,
+                'value' => false,
             ],
-            'outputSeparator' => [
+            'accessToken' => [
                 'type' => 'textfield',
-                'value' => "\n",
+                'value' => false,
             ],
             'toPlaceholder' => [
                 'type' => 'combo-boolean',

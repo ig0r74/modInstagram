@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'tpl.modExtra.item' => [
+    'tpl.modInstagram.item' => [
         'file' => 'item',
         'description' => '',
     ],
-    'tpl.modExtra.office' => [
-        'file' => 'office',
+    'tpl.modInstagram.wrapper' => [
+        'file' => 'wrapper',
         'description' => '',
     ],
 ];
