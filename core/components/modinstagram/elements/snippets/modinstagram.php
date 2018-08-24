@@ -8,13 +8,18 @@ $showLog = $modx->getOption('showLog', $scriptProperties, false);
 $maxId = $modx->getOption('maxId', $scriptProperties, false);
 $minId = $modx->getOption('minId', $scriptProperties, false);
 
+if (!$access_token) {
+    $modx->log(MODX_LOG_LEVEL_ERROR, 'No ACCESS TOKEN');
+    return '';
+}
+
 $pdo = $modx->getService('pdoTools');
 
 $pdo->addTime('pdoTools loaded');
 
 $query = array(
     'access_token' => $access_token,
-    'count' => $limit,
+    'count' => $limit ?: 20,
     'max_id' => $maxId,
     'min_id' => $minId
 );
@@ -22,7 +27,7 @@ $query = array(
 $response = file_get_contents('https://api.instagram.com/v1/users/self/media/recent/?' . http_build_query($query));
 
 if ($http_response_header[0] != 'HTTP/1.1 200 OK') {
-    $modx->log(1, 'modInstagram error: ' . $http_response_header[0]);
+    $modx->log(MODX_LOG_LEVEL_ERROR, 'modInstagram error: ' . $http_response_header[0]);
     return false;
 }
 
