@@ -19,7 +19,7 @@ return [
             ],
             'limit' => [
                 'type' => 'numberfield',
-                'value' => false,
+                'value' => '',
             ],
             'maxId' => [
                 'type' => 'textfield',

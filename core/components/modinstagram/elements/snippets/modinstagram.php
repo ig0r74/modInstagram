@@ -1,8 +1,8 @@
 <?php
-$access_token = $modx->getOption('accessToken', $scriptProperties, $modx->getOption('modinstagram_acess_token'));
+$access_token = $modx->getOption('accessToken', $scriptProperties, $modx->getOption('modinstagram_acess_token'), true);
 $tplWrapper = $modx->getOption('tplWrapper', $scriptProperties, false);
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.modInstagram.item');
-$limit = $modx->getOption('limit', $scriptProperties, 20);
+$limit = $modx->getOption('limit', $scriptProperties, 20, true);
 $toPlaceholder = $modx->getOption('toPlaceholder', $scriptProperties, false);
 $showLog = $modx->getOption('showLog', $scriptProperties, false);
 $maxId = $modx->getOption('maxId', $scriptProperties, false);
