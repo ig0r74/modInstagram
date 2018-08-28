@@ -5,6 +5,10 @@ return [
         'file' => 'modinstagram',
         'description' => 'modInstagram snippet to list posts',
         'properties' => [
+            'accessToken' => [
+                'type' => 'textfield',
+                'value' => '',
+            ],
             'tpl' => [
                 'type' => 'textfield',
                 'value' => 'tpl.modInstagram.item',
@@ -17,11 +21,19 @@ return [
                 'type' => 'numberfield',
                 'value' => false,
             ],
-            'accessToken' => [
+            'maxId' => [
                 'type' => 'textfield',
-                'value' => false,
+                'value' => '',
+            ],
+            'minId' => [
+                'type' => 'textfield',
+                'value' => '',
             ],
             'toPlaceholder' => [
+                'type' => 'combo-boolean',
+                'value' => false,
+            ],
+            'showLog' => [
                 'type' => 'combo-boolean',
                 'value' => false,
             ],
