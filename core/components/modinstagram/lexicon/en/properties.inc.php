@@ -1,8 +1,9 @@
 <?php
-
-$_lang['modinstagram_prop_limit'] = 'The number of Items to limit per page.';
-$_lang['modinstagram_prop_outputSeparator'] = 'A string to separate each row with.';
-$_lang['modinstagram_prop_sortby'] = 'The field to sort by.';
-$_lang['modinstagram_prop_sortdir'] = 'The direction to sort by.';
-$_lang['modinstagram_prop_tpl'] = 'The chunk to use for each row of Items.';
-$_lang['modinstagram_prop_toPlaceholder'] = 'If set, will output the content to the placeholder specified in this property, rather than outputting the content directly.';
+$_lang['modinstagram_prop_accessToken'] = 'ACCESS TOKEN received from Instagram. You can specify it globally in the system settings.';
+$_lang['modinstagram_prop_limit'] = 'Limit the output of posts on the page (maximum 20).';
+$_lang['modinstagram_prop_tpl'] = 'Checkout Chunk for each post.';
+$_lang['modinstagram_prop_tplWrapper'] = 'Chunk wrapper for wrapping all results. Understands one placeholder: {$ output}.';
+$_lang['modinstagram_prop_maxId'] = 'Get posts after the specified ID.';
+$_lang['modinstagram_prop_minId'] = 'Get posts to the specified ID.';
+$_lang['modinstagram_prop_toPlaceholder'] = 'If this parameter is specified, the result will be stored in the placeholder, instead of directly displaying it on the page.';
+$_lang['modinstagram_prop_showLog'] = 'Show log.';
