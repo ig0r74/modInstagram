@@ -1,8 +1,8 @@
 <?php
-$access_token = $modx->getOption('access_token', $scriptProperties, $modx->getOption('modinstagram_acess_token'));
+$access_token = $modx->getOption('accessToken', $scriptProperties, $modx->getOption('modinstagram_acess_token'));
 $tplWrapper = $modx->getOption('tplWrapper', $scriptProperties, false);
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.modInstagram.item');
-$limit = $modx->getOption('limit', $scriptProperties, false);
+$limit = $modx->getOption('limit', $scriptProperties, 20);
 $toPlaceholder = $modx->getOption('toPlaceholder', $scriptProperties, false);
 $showLog = $modx->getOption('showLog', $scriptProperties, false);
 $maxId = $modx->getOption('maxId', $scriptProperties, false);
@@ -19,7 +19,7 @@ $pdo->addTime('pdoTools loaded');
 
 $query = array(
     'access_token' => $access_token,
-    'count' => $limit ?: 20,
+    'count' => $limit,
     'max_id' => $maxId,
     'min_id' => $minId
 );
