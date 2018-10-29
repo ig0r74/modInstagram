@@ -55,6 +55,7 @@ if (!empty($response['data'])) {
             'video_standard_resolution' => $row['videos']['standard_resolution']['url'],
             'video_low_bandwidth' => $row['videos']['low_bandwidth']['url'],
             'video_low_resolution' => $row['videos']['low_resolution']['url'],
+            'carousel' => $row['carousel_media'],
         ));
         $idx++;
     }
