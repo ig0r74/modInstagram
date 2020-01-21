@@ -1,5 +1,9 @@
 ## modInstagram
 
+**Демо:** https://demo.webone.pw/modinstagram/
+
+**Всегда актуальная инструкция:** https://modstore.pro/packages/photos-and-files/modinstagram
+
 Компонент для MODX, который позволяет выводить на сайте последние посты из Instagram.
 
 > Для работы необходим **pdoTools**, он устанавливается автоматически. Также нужно получить **ACCESS TOKEN**.
