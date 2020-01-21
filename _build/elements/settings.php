@@ -6,4 +6,9 @@ return [
         'value' => false,
         'area' => 'modinstagram_main',
     ],
+    'username' => [
+        'xtype' => 'textfield',
+        'value' => false,
+        'area' => 'modinstagram_main',
+    ],
 ];
