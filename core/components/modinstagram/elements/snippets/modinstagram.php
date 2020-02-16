@@ -1,6 +1,17 @@
 <?php
-$access_token = $modx->getOption('accessToken', $scriptProperties, $modx->getOption('modinstagram_acess_token'), true);
-$username = $modx->getOption('username', $scriptProperties, $modx->getOption('modinstagram_username'), true);
+/** @var modX $modx */
+/** @var array $scriptProperties */
+/** @var modInstagram $modInstagram */
+$modInstagram = $modx->getService('modinstagram', 'modInstagram', MODX_CORE_PATH . 'components/modinstagram/model/', $scriptProperties);
+if (!$modInstagram) {
+    return 'Could not load modInstagram class!';
+}
+
+$accessToken = $modx->getOption('accessToken', $scriptProperties, $modx->getOption('modinstagram_acess_token'), true);
+$miUsername = $modx->getOption('miUsername', $scriptProperties, $modx->getOption('modinstagram_username'), false);
+if (empty($miUsername)) $miUsername = $modx->getOption('username', $scriptProperties, $modx->getOption('modinstagram_username'), false);
+$miPassword = $modx->getOption('miPassword', $scriptProperties, $modx->getOption('modinstagram_password'), false);
+$fromJson = $modx->getOption('fromJson', $scriptProperties, false);
 $tplWrapper = $modx->getOption('tplWrapper', $scriptProperties, false);
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.modInstagram.item');
 $cacheTime = $modx->getOption('cacheTime', $scriptProperties, 1800, true);
@@ -13,7 +24,7 @@ $minId = $modx->getOption('minId', $scriptProperties, false);
 
 $cacheManager = $modx->getCacheManager();
 
-if (!$access_token && !$username) {
+if (empty($accessToken) && !$miUsername) {
     $modx->log(MODX_LOG_LEVEL_ERROR, 'No ACCESS TOKEN & username');
     return '';
 }
@@ -24,37 +35,38 @@ $pdo->addTime('pdoTools loaded');
 
 if (!$output = $cacheManager->get($cachePrefix)) {
     
-    if (!empty($access_token)) {
+    // get data with token
+    if (!empty($accessToken)) {
         $query = array(
-            'access_token' => $access_token,
+            'access_token' => $accessToken,
             'count' => $limit,
             'max_id' => $maxId,
             'min_id' => $minId
         );
         
-        $response = file_get_contents('https://api.instagram.com/v1/users/self/media/recent/?' . http_build_query($query));
+        $url = 'https://api.instagram.com/v1/users/self/media/recent/?' . http_build_query($query);
         
-        if ($http_response_header[0] != 'HTTP/1.1 200 OK') {
-            if (empty($username)) {
-                $modx->log(MODX_LOG_LEVEL_ERROR, 'modInstagram error: ' . $http_response_header[0]);
-                return false;
+        $apiResponse = $modInstagram->getData($url);
+        
+        if (!empty($apiResponse['error'])) {
+            if (empty($miUsername)) {
+                $modx->log(MODX_LOG_LEVEL_ERROR, 'modInstagram error: ' . $apiResponse['error']);
+                $apiResponse = '';
+                // return false;
             }
         } else {
-            $response = json_decode($response, true);
+            $apiResponse['data'] = json_decode($apiResponse['result'], true);
         }
     }
     
-    if (empty($response['data']) && !empty($username)) {
-        $url = "https://www.instagram.com/" . $username . "/";
-        $json = file_get_contents($url);
-        if ($http_response_header[0] != 'HTTP/1.1 200 OK') {
-            $modx->log(MODX_LOG_LEVEL_ERROR, 'modInstagram error: ' . $http_response_header[0]);
+    // get data with scraper
+    if (empty($apiResponse['data']) && !empty($miUsername)) {
+        $data = $modInstagram->getScraperData($miUsername, $limit, $miPassword, $fromJson);
+        if (!empty($data['error'])) {
+            $modx->log(MODX_LOG_LEVEL_ERROR, 'modInstagram Scraper error: ' . $data['error']);
             return false;
         }
-        $json = explode("window._sharedData = ", $json)[1];
-        $json = explode(";</script>", $json)[0];
-        $array = json_decode($json, true);
-        $sharedData = $array['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['edges'];
+        $scraperData = $data['result'];
     }
     
     $pdo->addTime('File received');
@@ -63,56 +75,56 @@ if (!$output = $cacheManager->get($cachePrefix)) {
     
     $idx = 1;
     
-    if (empty($response) && !empty($sharedData)) {
-        $response['data'] = array();
-        foreach ($sharedData as $item){
+    if (empty($apiResponse['data']) && !empty($scraperData)) {
+        $apiResponse['data'] = array();
+        foreach ($scraperData as $item){
             $new_item = array(
-                'id' => $item['node']['id'],
+                'id' => $item->getId(),
                 'images' => array(
                     'thumbnail' => array(
-                        'url' => $item['node']['thumbnail_resources'][0]['src'],
+                        'url' => $item->getImageThumbnailUrl(),
                     ),
                     'low_resolution' => array(
-                        'url' => $item['node']['thumbnail_resources'][2]['src'],
+                        'url' => $item->getImageLowResolutionUrl(),
                     ),
                     'standard_resolution' => array(
-                        'url' => $item['node']['display_url'],
+                        'url' => $item->getImageHighResolutionUrl(),
                     ),
                 ),
-                'created_time' => $item['node']['taken_at_timestamp'],
+                'created_time' => $item->getCreatedTime(),
                 'caption' => array(
-                    'text' => $item['node']['edge_media_to_caption']['edges'][0]['node']['text']
+                    'text' => $item->getCaption()
                 ),
                 'likes' => array(
-                    'count' => $item['node']['edge_liked_by']['count']
+                    'count' => $item->getLikesCount()
                 ),
                 'comments' => array(
-                    'count' => $item['node']['edge_media_to_comment']['count']
+                    'count' => $item->getCommentsCount()
                 ),
-                'type' => str_replace(array('GraphSidecar', 'GraphVideo'), array('carousel','video'), $item['node']['__typename']),
-                'link' => 'https://www.instagram.com/p/' . $item['node']['shortcode'],
+                'type' => str_replace(array('GraphSidecar', 'GraphVideo'), array('carousel','video'), $item->getType()),
+                'link' => $item->getLink(),
                 'location' => array(
-                    'name' => $item['node']['location']['name']
+                    'name' => $item->getLocationName()
                 ),
                 'videos' => array( // unavailable
                     'standard_resolution' => array(
-                        'url' => '',
+                        'url' => $item->getVideoStandardResolutionUrl(),
                     ),
                     'low_bandwidth' => array(
-                        'url' => '',
+                        'url' => $item->getVideoLowBandwidthUrl(),
                     ),
                     'low_resolution' => array(
-                        'url' => '',
+                        'url' => $item->getVideoLowResolutionUrl(),
                     ),
                 ),
                 'carousel_media' => array(), // unavailable
             );
-            array_push($response['data'], $new_item);
+            array_push($apiResponse['data'], $new_item);
         }
     }
     
-    if (!empty($response['data'])) {
-        foreach($response['data'] as $row) {
+    if (!empty($apiResponse['data'])) {
+        foreach($apiResponse['data'] as $row) {
             $output .= $pdo->getChunk($tpl, array(
                 'idx' => $idx,
                 'id' => $row['id'],
