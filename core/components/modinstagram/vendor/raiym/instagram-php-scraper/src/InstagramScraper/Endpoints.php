@@ -183,12 +183,12 @@ class Endpoints
         return $url;
     }
 
-    public static function getLikeUrl($mediaId) 
+    public static function getLikeUrl($mediaId)
     {
         return str_replace('{mediaId}', urlencode($mediaId), static::LIKE_URL);
     }
 
-    public static function getUnlikeUrl($mediaId) 
+    public static function getUnlikeUrl($mediaId)
     {
         return str_replace('{mediaId}', urlencode($mediaId), static::UNLIKE_URL);
     }

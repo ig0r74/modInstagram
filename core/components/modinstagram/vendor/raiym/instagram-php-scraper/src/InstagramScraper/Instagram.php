@@ -350,7 +350,7 @@ class Instagram
         $userArray = self::extractSharedDataFromBody($response->raw_body);
 
         if (!isset($userArray['entry_data']['ProfilePage'][0]['graphql']['user'])) {
-            throw new InstagramNotFoundException('Account with this username does not exist');
+            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
         return Account::create($userArray['entry_data']['ProfilePage'][0]['graphql']['user']);
     }
@@ -489,7 +489,7 @@ class Instagram
         $userArray = $this->decodeRawBodyToJson($response->raw_body);
 
         if (!isset($userArray['graphql']['user'])) {
-            throw new InstagramNotFoundException('Account with this username does not exist');
+            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
 
         $nodes = $userArray['graphql']['user']['edge_owner_to_timeline_media']['edges'];
@@ -596,7 +596,8 @@ class Instagram
      */
     public function getPaginateMediasByUserId($id, $count = 12, $maxId = '')
     {
-        $hasNextPage = false;
+        $index = 0;
+        $hasNextPage = true;
         $medias = [];
 
         $toReturn = [
@@ -605,46 +606,52 @@ class Instagram
             'hasNextPage' => $hasNextPage,
         ];
 
-        $variables = json_encode([
-            'id' => (string)$id,
-            'first' => (string)$count,
-            'after' => (string)$maxId
-        ]);
+        while ($index < $count && $hasNextPage) {
+            $variables = json_encode([
+                'id' => (string)$id,
+                'first' => (string)$count,
+                'after' => (string)$maxId
+            ]);
 
-        $response = Request::get(
-            Endpoints::getAccountMediasJsonLink($variables),
-            $this->generateHeaders($this->userSession, $this->generateGisToken($variables))
-        );
+            $response = Request::get(
+                Endpoints::getAccountMediasJsonLink($variables),
+                $this->generateHeaders($this->userSession, $this->generateGisToken($variables))
+            );
 
-        if (static::HTTP_NOT_FOUND === $response->code) {
-            throw new InstagramNotFoundException('Account with given id does not exist.');
+            if (static::HTTP_NOT_FOUND === $response->code) {
+                throw new InstagramNotFoundException('Account with given id does not exist.');
+            }
+
+            if (static::HTTP_OK !== $response->code) {
+                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+            }
+
+            $arr = $this->decodeRawBodyToJson($response->raw_body);
+
+            if (!is_array($arr)) {
+                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+            }
+
+            $nodes = $arr['data']['user']['edge_owner_to_timeline_media']['edges'];
+
+            //if (count($arr['items']) === 0) {
+            // I generally use empty. Im not sure why people would use count really - If the array is large then count takes longer/has more overhead.
+            // If you simply need to know whether or not the array is empty then use empty.
+            if (empty($nodes)) {
+                return $toReturn;
+            }
+
+            foreach ($nodes as $mediaArray) {
+                if ($index === $count) {
+                    return $medias;
+                }
+                $medias[] = Media::create($mediaArray['node']);
+                $index++;
+            }
+
+            $maxId = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
+            $hasNextPage = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
         }
-
-        if (static::HTTP_OK !== $response->code) {
-            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
-        }
-
-        $arr = $this->decodeRawBodyToJson($response->raw_body);
-
-        if (!is_array($arr)) {
-            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
-        }
-
-        $nodes = $arr['data']['user']['edge_owner_to_timeline_media']['edges'];
-
-        //if (count($arr['items']) === 0) {
-        // I generally use empty. Im not sure why people would use count really - If the array is large then count takes longer/has more overhead.
-        // If you simply need to know whether or not the array is empty then use empty.
-        if (empty($nodes)) {
-            return $toReturn;
-        }
-
-        foreach ($nodes as $mediaArray) {
-            $medias[] = Media::create($mediaArray['node']);
-        }
-
-        $maxId = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
-        $hasNextPage = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
 
         $toReturn = [
             'medias' => $medias,
@@ -683,49 +690,53 @@ class Instagram
         $index = 0;
         $hasPrevious = true;
         while ($hasPrevious && $index < $count) {
-            if (!isset($maxId)) {
-                $maxId = '';
-            }
             if ($count - $index > static::MAX_COMMENTS_PER_REQUEST) {
-                $numberOfCommentsToRetreive = static::MAX_COMMENTS_PER_REQUEST;
+                $numberOfCommentsToRetrieve = static::MAX_COMMENTS_PER_REQUEST;
             } else {
-                $numberOfCommentsToRetreive = $count - $index;
+                $numberOfCommentsToRetrieve = $count - $index;
             }
 
             $variables = json_encode([
                 'shortcode' => (string)$code,
-                'first' => (string)$numberOfCommentsToRetreive,
+                'first' => (string)$numberOfCommentsToRetrieve,
                 'after' => (string)$maxId
             ]);
 
             $commentsUrl = Endpoints::getCommentsBeforeCommentIdByCode($variables);
             $response = Request::get($commentsUrl, $this->generateHeaders($this->userSession, $this->generateGisToken($variables)));
-            // use a raw constant in the code is not a good idea!!
-            //if ($response->code !== 200) {
+            
             if (static::HTTP_OK !== $response->code) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
             $this->parseCookies($response->headers);
             $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
+
+            if (
+                !isset($jsonResponse['data']['shortcode_media']['edge_media_to_comment']['edges'])
+                || !isset($jsonResponse['data']['shortcode_media']['edge_media_to_comment']['count'])
+                || !isset($jsonResponse['data']['shortcode_media']['edge_media_to_comment']['page_info']['has_next_page'])
+                || !array_key_exists('end_cursor', $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['page_info'])
+            ) {
+                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+            }
+
             $nodes = $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['edges'];
-            if (empty($nodes)) {
-                return [];
+            $hasPrevious = $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['page_info']['has_next_page'];
+            $numberOfComments = $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['count'];
+            $maxId = $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['page_info']['end_cursor'];
+
+            if (empty($nodes) && $numberOfComments === 0) {
+                break;
             }
 
             foreach ($nodes as $commentArray) {
                 $comments[] = Comment::create($commentArray['node']);
                 $index++;
             }
-            $hasPrevious = $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['page_info']['has_next_page'];
-
-            $numberOfComments = $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['count'];
+            
             if ($count > $numberOfComments) {
                 $count = $numberOfComments;
             }
-            if (sizeof($nodes) == 0) {
-                return $comments;
-            }
-            $maxId = $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['page_info']['end_cursor'];
         }
         return $comments;
     }
