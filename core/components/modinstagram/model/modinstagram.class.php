@@ -89,14 +89,19 @@ class modInstagram
     	    }
     	    
             if ($json) {
-                $medias = $instagram->getMediasFromFeed($username, $limit ?: 20);
+                $medias = $instagram->getMediasFromFeed($username, $limit);
             } else {
-                $medias = $instagram->getMedias($username, $limit ?: 20);
+                $medias = $instagram->getMedias($username, $limit);
             }
         }
         
         catch (Exception $ex) {
-            $this->modx->log(MODX_LOG_LEVEL_ERROR, 'modInstagram scraper error: ' . $ex->getMessage());
+            $err['message'] = $ex->getMessage();
+            $err['code'] = $ex->getCode();
+            $err['file'] = $ex->getFile();
+            $err['line'] = $ex->getLine();
+            //$err['trace'] = $ex->getTraceAsString();
+            $this->modx->log(MODX_LOG_LEVEL_ERROR, 'modInstagram Scraper error: ' . get_class($ex) . " '{$err['message']}' (code: {$err['code']}) in {$err['file']}({$err['line']})");
             return false;
         }
         

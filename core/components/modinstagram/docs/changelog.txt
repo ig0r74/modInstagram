@@ -1,5 +1,9 @@
 Changelog for modInstagram.
 
+#1.2.2
+
+* Более подробные Exceptions
+
 #1.2.1
 
 * instagram-php-scraper обновлен до v0.9.4
