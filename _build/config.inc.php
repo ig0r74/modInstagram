@@ -11,7 +11,7 @@ if (!defined('MODX_CORE_PATH')) {
 return [
     'name' => 'modInstagram',
     'name_lower' => 'modinstagram',
-    'version' => '1.2.2',
+    'version' => '1.2.3',
     'release' => 'beta',
     // Install package to site right after build
     'install' => true,
