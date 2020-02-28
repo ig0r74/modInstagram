@@ -71,6 +71,7 @@ class modInstagram
                     )
                 );
                 $instagram->login();
+                $instagram->saveSession();
     	    } else {
                 $instagram = new \InstagramScraper\Instagram();
     	    }
