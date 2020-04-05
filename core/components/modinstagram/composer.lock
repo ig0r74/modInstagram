@@ -249,16 +249,16 @@
         },
         {
             "name": "raiym/instagram-php-scraper",
-            "version": "v0.9.4",
+            "version": "v0.9.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/postaddictme/instagram-php-scraper.git",
-                "reference": "7fce6a72cf100554d5420873439b78675bfa73cc"
+                "reference": "d3e15b8941bf7f6830561107141003e4eb3f6261"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/postaddictme/instagram-php-scraper/zipball/7fce6a72cf100554d5420873439b78675bfa73cc",
-                "reference": "7fce6a72cf100554d5420873439b78675bfa73cc",
+                "url": "https://api.github.com/repos/postaddictme/instagram-php-scraper/zipball/d3e15b8941bf7f6830561107141003e4eb3f6261",
+                "reference": "d3e15b8941bf7f6830561107141003e4eb3f6261",
                 "shasum": ""
             },
             "require": {
@@ -294,7 +294,7 @@
                 "instagram",
                 "scraper"
             ],
-            "time": "2020-02-18 17:18:41"
+            "time": "2020-03-11 08:52:37"
         }
     ],
     "packages-dev": [],
