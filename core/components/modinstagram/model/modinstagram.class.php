@@ -75,8 +75,9 @@ class modInstagram
     	    } else {
                 $instagram = new \InstagramScraper\Instagram();
     	    }
+            $instagram->setUserAgent('Instagram 126.0.0.25.121 Android (23/6.0.1; 320dpi; 720x1280; samsung; SM-A310F; a3xelte; samsungexynos7580; en_GB; 110937453)');
     	    if (!empty($this->modx->getOption('modinstagram_proxy_address'))) {
-                Instagram::setProxy([
+                $instagram->setProxy([
                     'address' => $this->modx->getOption('modinstagram_proxy_address'),
                     'port'    => $this->modx->getOption('modinstagram_proxy_port'),
                     'tunnel'  => $this->modx->getOption('modinstagram_proxy_tunnel'),
